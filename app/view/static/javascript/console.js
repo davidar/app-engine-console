@@ -366,7 +366,7 @@ var setDashboard = function(event) {
     else if(choice == 'Production')
         url = $('#setting_dash_url_pro').val();
     else if(choice == 'Analytics')
-        url = 'https://www.google.com/analytics/reporting/?reset=1&id=' + $('#settings_dash_url_analytics').val();
+        url = 'https://www.google.com/analytics/reporting/?reset=1&id=' + $('#setting_dash_url_analytics').val();
 
     $('#dashboard').html(
             '<iframe width="100%" height="540" marginwidth="0" marginheight="0" scrolling="yes"' +

@@ -17,6 +17,8 @@
 # along with App Engine Console; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import common.appenginepatch.main
+
 import os
 import re
 import sys
@@ -28,7 +30,7 @@ from os.path import join, dirname
 sys.path.insert(0, dirname(__file__))
 sys.path.insert(0, dirname(dirname(__file__)))
 
-import util
+import consoleutil as util
 import controller
 
 from google.appengine.ext import webapp

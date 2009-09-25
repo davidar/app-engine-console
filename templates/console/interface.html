@@ -53,7 +53,7 @@
             <!-- Header -->
             <div id="hd">
                 <div style="float:left; color:green; font-weight:bold">
-                    {{app|capfirst}} {{version}}
+                    {{app}} {{version}}
                     {% if is_dev %}
                         (DEVELOPMENT)
                     {% endif %}
@@ -66,10 +66,6 @@
             
                     <a class="novisit" href="/">Front Page</a>
                     |
-                    {% if is_dev %}
-                        <a class="novisit" href="http://{{version}}.{{app}}.appspot.com/">Production</a>
-                        |
-                    {% endif %}
             
                     <a class="novisit" href="http://code.google.com/appengine/docs/">API</a>
                     |
@@ -151,7 +147,7 @@
                 {% endblock %}
           
                 <div class="extra" style="font-size: 9pt; float: right;">
-                    {% include "console_revision.html" %}
+                    {# include "console/console_revision.html" #}
                 </div>
 
                 {% block analytics %}

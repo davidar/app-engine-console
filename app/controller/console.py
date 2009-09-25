@@ -29,18 +29,21 @@ import exceptions
 
 import pygments
 import pygments.lexers
+from pygments.lexers import PythonLexer
+from pygments.lexers import PythonConsoleLexer
 import pygments.formatters
 
-import util
+import consoleutil as util
 import model
 import config
 
-from google.appengine.api        import users
-from google.appengine.api        import memcache
-from google.appengine.ext        import db
-from google.appengine.ext        import webapp
-from google.appengine.ext.webapp import template
-from django.utils                import simplejson
+from google.appengine.api import users
+from google.appengine.api import memcache
+from google.appengine.ext import db
+from google.appengine.ext import webapp
+#from google.appengine.ext.webapp import template
+from django.utils import simplejson
+from django.template.loader import render_to_string
 
 # Unpicklable statements to seed new sessions with.
 INITIAL_UNPICKLABLES = [
@@ -67,7 +70,7 @@ def confirm_permission():
         if not user:
             raise nologin
         else:
-            if config.allow_any_user or util.is_my_website():
+            if config.allow_any_user:
                 pass                    # Do what the man says.
             else:
                 if users.is_current_user_admin():
@@ -129,36 +132,11 @@ class ConsoleHandler(webapp.RequestHandler):
 
 
 class Statement(ConsoleHandler):
-    lexer           = pygments.lexers.PythonLexer()
-    resultLexer     = pygments.lexers.PythonConsoleLexer()
+    lexer           = PythonLexer()
+    resultLexer     = PythonConsoleLexer()
     inputFormatter  = pygments.formatters.HtmlFormatter(cssclass='statement')
     outputFormatter = pygments.formatters.HtmlFormatter(cssclass='stdout')
     errorFormatter  = pygments.formatters.HtmlFormatter(cssclass='stderr')
-
-    def confirmPostRate(self):
-        """Make sure anybody using the site doesn't post too quickly and use up resources."""
-        if not util.is_my_website():
-            return
-
-        # Ideally, the REMOTE_ADDR combined with HTTP_X_FORWARDED_FOR reasonably identifies a unique user.  But
-        # someone could just change their FORWARDED_FOR header all the time and get around this limit, so we
-        # just make everybody behind the same proxy suffer.
-        requester = os.environ.get('REMOTE_ADDR', 'unknown')
-        #requester += ',' + os.environ.get('HTTP_X_FORWARDED_FOR', '')
-
-        # XXX: There is a small risk here since no distinction is made between "key does not exist"
-        # and "failed to increment key for some other reason.
-        numStatements = memcache.incr(requester)
-        if numStatements is None:
-            # Start a fresh timer to limit the statements.
-            result = memcache.add(requester, 1, 60)     # 60-second timeout
-            if result == False:
-                logging.error('Failed to set memcache for: %s' % requester)
-                self.error(403)
-                raise HandlerError('Memcache error')
-        elif numStatements > self.PUBLIC_STATEMENT_LIMIT:
-                logging.info('Denying statement %d: %s' % (numStatements, username()))
-                raise TooFastError('Sorry, your statements are too frequent. Please wait one minute or consider ${download}.')
 
     def post(self):
         """Process a statement and return output and error messages"""
@@ -168,7 +146,6 @@ class Statement(ConsoleHandler):
 
         try:
             confirm_permission()
-            self.confirmPostRate()
         except ConsoleError:
             # Acces denied.
             logging.info('Access denied (%s): %s\n%s' % (exc_type, username(), code))
@@ -307,11 +284,11 @@ class Banner(ConsoleHandler):
 
 class Page(ConsoleHandler):
     """A human-visible "page" that presents itself to a person."""
-    templates = os.path.join(
-        os.path.dirname(
-            os.path.dirname(__file__)),
-        'view',
-        'templates')
+    #templates = os.path.join(
+    #    os.path.dirname(
+    #        os.path.dirname(__file__)),
+    #    'view',
+    #    'templates')
     appID = util.app_id()
     appVersion = os.environ['CURRENT_VERSION_ID']
     subpages = []
@@ -342,10 +319,10 @@ class Page(ConsoleHandler):
                                     {'name':'Help'      , 'href':'/console/help/'},
                                   ]
 
-        if util.is_my_website():
-            self.values['my_website'] = True
-            self.values['app'] = 'App Engine Console'
-            self.values['version'] = re.sub(r'\.\d$', '', self.values['version'])
+        #if util.is_my_website():
+        #    self.values['my_website'] = True
+        #    self.values['app'] = 'App Engine Console'
+        #    self.values['version'] = re.sub(r'\.\d$', '', self.values['version'])
 
         match = re.search(r'^/console/%s/(.+)$' % self.page, path)
         if match:
@@ -357,11 +334,11 @@ class Page(ConsoleHandler):
                 # The default sub-page is the first one in the list.
                 self.values['subpage'] = self.subpages[0]
 
-        templateFile = '%s_%s.html' % (self.page, self.values['subpage'])
-        self.template = os.path.join(self.templates, templateFile)
+        self.template = \
+            'console/%s_%s.html' % (self.page, self.values['subpage'])
 
     def write(self):
-        self.response.out.write(template.render(self.template, self.values))
+        self.response.out.write(render_to_string(self.template, self.values))
 
     def wrap_get(self):
         self.values['user'] = users.get_current_user()
@@ -390,8 +367,8 @@ class Console(Page):
                 engine.unpicklables = [db.Text(line) for line in INITIAL_UNPICKLABLES]
                 session_key = engine.put()
 
-        if util.is_my_website():
-            self.values['ratelimit'] = self.PUBLIC_STATEMENT_LIMIT
+        #if util.is_my_website():
+        #    self.values['ratelimit'] = self.PUBLIC_STATEMENT_LIMIT
 
         if config.pastebin_subdomain:
             pastebin = 'http://%s.pastebin.com/' % config.pastebin_subdomain
@@ -435,8 +412,8 @@ class Dashboard(Page):
 class Help(Page):
     subpages = ['usage', 'integration', 'about']
 
-    pythonLexer     = pygments.lexers.PythonLexer()
-    resultLexer     = pygments.lexers.PythonConsoleLexer()
+    pythonLexer     = PythonLexer()
+    resultLexer     = PythonConsoleLexer()
     inputFormatter  = pygments.formatters.HtmlFormatter(cssclass='statement')
     outputFormatter = pygments.formatters.HtmlFormatter(cssclass='stdout')
 
@@ -483,10 +460,10 @@ class Help(Page):
 
 class Root(Page):
     def get(self):
-        if util.is_my_website():
-            self.redirect('/console/help/about')
-        else:
-            self.redirect('/console/')
+        #if util.is_my_website():
+        #    self.redirect('/console/help/about')
+        #else:
+        self.redirect('/console/')
         self.done = True
 
 __all__ = ['Console', 'Dashboard', 'Help', 'Statement', 'Banner', 'Root']

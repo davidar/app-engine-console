@@ -1,8 +1,10 @@
 # The App Engine Console configuration options
 
+from django.conf import settings
+
 # Set this to true if you want to hide the console from non-authorized users
 # by returning HTTP 404 (file not found), instead of the normal behavior.
-hide_from_invalid_users = False
+hide_from_invalid_users = True
 
 # In production mode, only administrators may use the console. However, if you
 # really want to allow any regular logged-in user to use the console, you can
@@ -14,7 +16,7 @@ allow_any_user = False
 # go to your report and get the "id" variable from the URL.  *Note*, this is
 # *not* the ID that Google has you paste into your pages.  It is a different
 # ID that comes from the reports page within google.
-analytics_id = ''
+analytics_id = settings.GOOGLE_ANALYTICS_ID
 
 # Set this to a string if you wish to use a subdomain of pastebin.com.
 pastebin_subdomain = ''
@@ -23,7 +25,7 @@ pastebin_subdomain = ''
 # But in development mode, anonymous users may.  If you still want to disallow
 # anonymous users from using the console from the development SDK, set this
 # variable to True.
-require_login_during_development = False
+require_login_during_development = True
 
 # Set this to True to enable automatic HTML links to the Python documentation for
 # exceptions, types, modules, etc.

@@ -1,3 +1,5 @@
+{% extends "console/help.html" %}
+
 {# Integration instructions template
  #
  # Copyright 2008-2009 Proven Corporation Co., Ltd., Thailand
@@ -17,8 +19,6 @@
  # along with App Engine Console; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #}
-
-{% extends "help.html" %}
 
 {% block helpcontent %}
     <h3>Integrating With Your Application</h3>
@@ -85,11 +85,11 @@
     <p>
         For example, open <tt>autoexec.py</tt> and add the following code:
     </p>
-    <div class="example pygments">{{example1}}</div>
+    <div class="example pygments">{{example1|safe}}</div>
     <p>
         Now you can use it easily at the console:
     </p>
-    <div class="example pygments">{{example2}}</div>
+    <div class="example pygments">{{example2|safe}}</div>
 
     <h3>Configuration and Security</h3>
     <p>
